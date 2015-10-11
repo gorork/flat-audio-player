@@ -109,7 +109,8 @@ Custom property                             | Description                       
         width: 100%;
         --paper-progress-active-color: var(--paper-audio-player-color, blueviolet);
         --paper-progress-height: 50px;
-        --paper-progress-container-color: rgba(255,255,255,.75);
+        --paper-progress-container-color: rgba(255,255,255,.40);
+        --paper-progress-secondary-color: rgba(255,255,255,.60);
       }
 
       /* On hover */
@@ -198,13 +199,14 @@ Custom property                             | Description                       
         <!-- Audio HTML5 element -->
         <audio id="audio"
                src="{{ src }}"
-               current-time="{{ currentTime }}"></audio>
-
+               current-time="{{ currentTime }}"
+               buffered="{{ buffered::progress }}"></audio>
         <!-- Paper progress bar -->
         <paper-progress id="progress"
                         step=0.001
                         value="[[ currentTime ]]"
                         max="[[ duration ]]"
+                        secondary-progress="[[ getBuff(buffered) ]]"
                         min=0
                         on-down="_onDown"></paper-progress>
     </div>
@@ -236,10 +238,13 @@ Custom property                             | Description                       
         },
         currentTime: {
           type: Number,
-          value: 0,
-          notify: true
+          value: 0
         },
         duration: {
+          type: Number,
+          value: 0
+        },
+        buffered: {
           type: Number,
           value: 0
         }
@@ -315,7 +320,6 @@ Custom property                             | Description                       
         if (player.timer.sliderUpdateInterval) { clearInterval(player.timer.sliderUpdateInterval); }
         player.timer.sliderUpdateInterval = setInterval( function(){
           if ( player.isPlaying ) {
-            player.$.progress.value = player.$.audio.currentTime;
             player.currentTime = player.$.audio.currentTime;
           } else {
             clearInterval(player.timer.sliderUpdateInterval);
@@ -398,6 +402,11 @@ Custom property                             | Description                       
         x = event.detail.sourceEvent.x - this.offsetLeft - 50,
         r = (x / player.$["progress"].offsetWidth) * player.duration;
         player.currentTime = r;
+      },
+
+      getBuff: function(arr, value, index) {
+        if (arr.length){
+          return (arr.end(index));}
       }
     });
   </script>
