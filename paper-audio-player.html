@@ -231,7 +231,10 @@ Custom property                             | Description                       
       // Define public properties
 
       properties: {
-        src: String,
+        src: {
+          type: String,
+          observer: "_srcChanged"
+        },
         title: {
           type: String,
           value: 'Click to play this audio file'
@@ -247,6 +250,10 @@ Custom property                             | Description                       
         buffered: {
           type: Number,
           value: 0
+        },
+        autoPlay: {
+          type: Boolean,
+          value: false
         }
       },
 
@@ -407,7 +414,19 @@ Custom property                             | Description                       
       getBuff: function(arr, value, index) {
         if (arr.length){
           return (arr.end(index));}
-      }
+      },
+
+
+       // When src is changed, pause the song
+
+      _srcChanged: function(oldValue, newValue) {
+        var player = this;
+
+        if (player.isPlaying == true) {
+            player.$.audio.play();
+            player.$.audio.pause();
+        }
+       }
     });
   </script>
 </dom-module>
