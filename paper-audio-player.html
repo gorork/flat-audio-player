@@ -32,7 +32,6 @@ Custom property                             | Description                       
   <template>
 
     <style>
-
       :host {
         display: block;
         box-sizing: border-box;
@@ -44,7 +43,7 @@ Custom property                             | Description                       
         position: relative;
         cursor: pointer;
         height: 50px;
-        box-shadow: 0 1px 2px rgba(0,0,0,.3);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .3);
       }
 
       #left,
@@ -53,12 +52,13 @@ Custom property                             | Description                       
         width: 50px;
         position: relative;
       }
+
       #left {
-        background-color:  var(--paper-audio-player-color, blueviolet);
+        background-color: var(--paper-audio-player-color, blueviolet);
       }
 
       #right {
-        background-color: rgba(255,255,255,.75);
+        background-color: rgba(255, 255, 255, .75);
       }
 
       #time,
@@ -109,10 +109,9 @@ Custom property                             | Description                       
         width: 100%;
         --paper-progress-active-color: var(--paper-audio-player-color, blueviolet);
         --paper-progress-height: 50px;
-        --paper-progress-container-color: rgba(255,255,255,.40);
-        --paper-progress-secondary-color: rgba(255,255,255,.60);
+        --paper-progress-container-color: rgba(255, 255, 255, .40);
+        --paper-progress-secondary-color: rgba(255, 255, 255, .60);
       }
-
       /* On hover */
 
       :host(.hovered) #pause {
@@ -126,7 +125,6 @@ Custom property                             | Description                       
       :host(.hovered) #title {
         color: #333 !important;
       }
-
       /* On Error */
 
       :host(.cantplay) #title {
@@ -136,7 +134,6 @@ Custom property                             | Description                       
       :host(.cantplay) #wrapper {
         cursor: default;
       }
-
       /* Flexbox Helpers */
 
       .layout-horizontal {
@@ -173,14 +170,9 @@ Custom property                             | Description                       
       }
     </style>
 
-    <div id="wrapper"
-         class="layout-horizontal"
-         on-mouseenter="_onMouseenter"
-         on-mouseleave="_onMouseleave">
+    <div id="wrapper" class="layout-horizontal" on-mouseenter="_onMouseenter" on-mouseleave="_onMouseleave">
 
-      <div id="left"
-           class="self-start"
-           on-click="playPause">
+      <div id="left" class="self-start" on-click="playPause">
 
         <!-- Icon -->
         <iron-icon id="icon" class="fit" icon="{{ icon }}" hidden$="{{ isPlaying }}"></iron-icon>
@@ -197,19 +189,10 @@ Custom property                             | Description                       
         <div id="title" class="fit">{{ title }}</div>
 
         <!-- Audio HTML5 element -->
-        <audio id="audio"
-               src="{{ src }}"
-               current-time="{{ currentTime }}"
-               buffered="{{ buffered::progress }}"></audio>
+        <audio id="audio" src="{{ src }}" current-time="{{ currentTime }}" buffered="{{ buffered::progress }}"></audio>
         <!-- Paper progress bar -->
-        <paper-progress id="progress"
-                        step=0.001
-                        value="[[ currentTime ]]"
-                        max="[[ duration ]]"
-                        secondary-progress="[[ getBuff(buffered) ]]"
-                        min=0
-                        on-down="_onDown"></paper-progress>
-    </div>
+        <paper-progress id="progress" step=0.001 value="[[ currentTime ]]" max="[[ duration ]]" secondary-progress="[[ _getBuff(buffered) ]]" min=0 on-down="_onDown"></paper-progress>
+      </div>
 
       <div id="right" class="self-end">
         <!-- Duration -->
@@ -225,211 +208,229 @@ Custom property                             | Description                       
 
   <script>
     Polymer({
-      is: 'paper-audio-player',
+          is: 'paper-audio-player',
 
-      //
-      // Define public properties
+          //
+          // Define public properties
 
-      properties: {
-        src: {
-          type: String,
-          observer: "_srcChanged"
-        },
-        title: {
-          type: String,
-          value: 'Click to play this audio file'
-        },
-        currentTime: {
-          type: Number,
-          value: 0
-        },
-        duration: {
-          type: Number,
-          value: 0
-        },
-        buffered: {
-          type: Number,
-          value: 0
-        },
-        autoPlay: {
-          type: Boolean,
-          value: false
-        }
-      },
+          properties: {
+            src: {
+              type: String,
+              observer: "_srcChanged"
+            },
+            title: {
+              type: String,
+              value: 'Click to play this audio file'
+            },
+            currentTime: {
+              type: Number,
+              value: 0
+            },
+            duration: {
+              type: Number,
+              value: 0
+            },
+            buffered: {
+              type: Number,
+              value: 0
+            },
+            autoPlay: {
+              type: Boolean,
+              value: false
+            },
 
+            /**
+             * Used for set the time on the track.
+             * Should be get of the parent or undefined for itself
+             *
+             * @type Number
+             * @default undefined
+             */
 
-      //
-      // Register event listeners
-
-      listeners: {
-        'audio.loadedmetadata'  : '_onCanPlay',
-        'audio.playing'         : '_onPlaying',
-        'audio.pause'           : '_onPause',
-        'audio.ended'           : '_onEnd',
-        'audio.error'           : '_onError'
-      },
-
-
-      //
-      // When element is created
-
-      ready: function() {
-        var player = this;
-
-        //
-        // create Player defaults
-
-        player.canBePlayed = false;
-        player.isPlaying = false;
-        player.ended = false;
-        player.icon = '';
-      },
+            offsetLeftParent: {
+              type: Number
+            }
+          },
 
 
-      // Play/Pause controls
+          //
+          // Register event listeners
 
-      playPause: function(e){
-        e.preventDefault();
-        var player = this;
-
-        if ( player.canBePlayed ) {
-          return player.isPlaying ? player.$.audio.pause() : player.$.audio.play();
-        }
-      },
-
-
-      // when audio file can be played in user's browser
-
-      _onCanPlay: function() {
-        var player = this;
-        player.canBePlayed = true;
-        player.icon = 'av:album';
-        player.duration = player.$.audio.duration
-        if (player.autoPlay == true) {
-          player.$.audio.play();
-        }
-      },
+          listeners: {
+            'audio.loadedmetadata': '_onCanPlay',
+            'audio.playing': '_onPlaying',
+            'audio.pause': '_onPause',
+            'audio.ended': '_onEnd',
+            'audio.error': '_onError'
+          },
 
 
-      // when Player starts playing
+          //
+          // When element is created
 
-      _onPlaying: function() {
-        var player = this;
-        player.ended = false;
-        player.isPlaying = true;
-        player._startProgressTimer();
-      },
+          ready: function() {
+            var player = this;
 
+            //
+            // create Player defaults
 
-      // starts Timer
-
-      _startProgressTimer: function() {
-        var player = this;
-        player.timer = {};
-
-        if (player.timer.sliderUpdateInterval) { clearInterval(player.timer.sliderUpdateInterval); }
-        player.timer.sliderUpdateInterval = setInterval( function(){
-          if ( player.isPlaying ) {
-            player.currentTime = player.$.audio.currentTime;
-          } else {
-            clearInterval(player.timer.sliderUpdateInterval);
-          }
-        }, 120);
-      },
+            player.canBePlayed = false;
+            player.isPlaying = false;
+            player.ended = false;
+            player.icon = '';
+          },
 
 
-      // when Player is paused
+          // Play/Pause controls
 
-      _onPause: function() {
-        var player = this;
-        player.isPlaying = false;
-      },
+          playPause: function(e) {
+            e.preventDefault();
+            var player = this;
 
-
-      // when Player ended playing an audio file
-
-      _onEnd: function() {
-        var player = this;
-        player.ended = true;
-        player.isPlaying = false;
-        player.currentTime = 0;
-      },
+            if (player.canBePlayed) {
+              return player.isPlaying ? player.$.audio.pause() : player.$.audio.play();
+            }
+          },
 
 
-      // on file load error
+          // when audio file can be played in user's browser
 
-      _onError: function() {
-        var player = this;
-        player.classList.add('cantplay');
-        player.title = 'Sorry, can\'t play track: ' + player.title;
-        player.icon = 'av:not-interested';
-      },
-
-
-      // on mouseenter
-
-      _onMouseenter: function() {
-        var player = this;
-
-        if (player.canBePlayed) {
-          player.classList.add('hovered');
-
-          if (!player.isPlaying) {
-            player.icon = 'av:play-circle-outline';
-          }
-        }
-      },
-
-      // on mouseleave
-
-      _onMouseleave: function() {
-        var player = this;
-        player.classList.remove('hovered');
-
-        if (player.canBePlayed) {
-          if (!player.isPlaying) {
+          _onCanPlay: function() {
+            var player = this;
+            player.canBePlayed = true;
             player.icon = 'av:album';
-          }
+            player.duration = player.$.audio.duration
+            if (player.autoPlay == true) {
+              player.$.audio.play();
+            }
+          },
+
+
+          // when Player starts playing
+
+          _onPlaying: function() {
+            var player = this;
+            player.ended = false;
+            player.isPlaying = true;
+            player._startProgressTimer();
+          },
+
+
+          // starts Timer
+
+          _startProgressTimer: function() {
+            var player = this;
+            player.timer = {};
+
+            if (player.timer.sliderUpdateInterval) {
+              clearInterval(player.timer.sliderUpdateInterval);
+            }
+            player.timer.sliderUpdateInterval = setInterval(function() {
+              if (player.isPlaying) {
+                player.currentTime = player.$.audio.currentTime;
+              } else {
+                clearInterval(player.timer.sliderUpdateInterval);
+              }
+            }, 120);
+          },
+
+
+          // when Player is paused
+
+          _onPause: function() {
+            var player = this;
+            player.isPlaying = false;
+          },
+
+
+          // when Player ended playing an audio file
+
+          _onEnd: function() {
+            var player = this;
+            player.ended = true;
+            player.isPlaying = false;
+            player.currentTime = 0;
+          },
+
+
+          // on file load error
+
+          _onError: function() {
+            var player = this;
+            player.classList.add('cantplay');
+            player.title = 'Sorry, can\'t play track: ' + player.title;
+            player.icon = 'av:not-interested';
+          },
+
+
+          // on mouseenter
+
+          _onMouseenter: function() {
+            var player = this;
+
+            if (player.canBePlayed) {
+              player.classList.add('hovered');
+
+              if (!player.isPlaying) {
+                player.icon = 'av:play-circle-outline';
+              }
+            }
+          },
+
+          // on mouseleave
+
+          _onMouseleave: function() {
+            var player = this;
+            player.classList.remove('hovered');
+
+            if (player.canBePlayed) {
+              if (!player.isPlaying) {
+                player.icon = 'av:album';
+              }
+            }
+          },
+
+          // to convert seconds to 'm:ss' format
+
+          _convertSecToMin: function(seconds) {
+            if (seconds === 0) {
+              return '';
+            }
+            var minutes = Math.floor(seconds / 60);
+            var secondsToCalc = Math.floor(seconds % 60) + '';
+            return minutes + ':' + (secondsToCalc.length < 2 ? '0' + secondsToCalc : secondsToCalc);
+          },
+
+
+          // to change the time on the track
+
+          _onDown: function(e) {
+            var r, x, player = this;
+            if (player.offsetLeftParent === undefined) {
+              x = event.detail.sourceEvent.x - this.offsetLeft - 50;
+          } else {
+            x = event.detail.sourceEvent.x - this.offsetLeftParent - 50;
+        }
+        player.currentTime = (x / player.$["progress"].offsetWidth) * player.duration;
+      },
+
+      _getBuff: function(arr, value, index) {
+        if (arr.length) {
+          return (arr.end(index));
         }
       },
 
-      // to convert seconds to 'm:ss' format
 
-      _convertSecToMin: function(seconds){
-        if (seconds === 0) {
-          return '';
-        }
-        var minutes = Math.floor(seconds / 60);
-        var secondsToCalc = Math.floor(seconds % 60) + '';
-        return minutes + ':' + (secondsToCalc.length < 2 ? '0' + secondsToCalc : secondsToCalc);
-      },
-
-
-      // to change the time on the track
-
-      _onDown: function(e){
-        var player = this,
-        x = event.detail.sourceEvent.x - this.offsetLeft - 50,
-        r = (x / player.$["progress"].offsetWidth) * player.duration;
-        player.currentTime = r;
-      },
-
-      getBuff: function(arr, value, index) {
-        if (arr.length){
-          return (arr.end(index));}
-      },
-
-
-       // When src is changed, pause the song
+      // When src is changed, pause the song
 
       _srcChanged: function(oldValue, newValue) {
         var player = this;
 
         if (player.isPlaying == true) {
-            player.$.audio.play();
-            player.$.audio.pause();
+          player.$.audio.play();
+          player.$.audio.pause();
         }
-       }
+      }
     });
   </script>
 </dom-module>
