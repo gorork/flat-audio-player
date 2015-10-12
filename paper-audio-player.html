@@ -13,7 +13,7 @@ Example:
 
 ### Styling the player:
 
-To change the active progress bar color:
+To change the active progress bar color, can be change with attribute 'color' too:
 
     paper-audio-player {
        --paper-audio-player-color: #e91e63;
@@ -219,12 +219,19 @@ Custom property                             | Description                       
       // Define public properties
 
       properties: {
-        src: String,
+        src: {
+          type: String,
+          observer: "_srcChanged"
+        },
         title: {
           type: String,
           value: 'Click to play this audio file'
         },
-        color: String
+        color: String,
+        autoPlay: {
+          type: Boolean,
+          value: false
+        }
       },
 
 
@@ -298,6 +305,9 @@ Custom property                             | Description                       
         player.icon = 'av:album';
         player.duration = player.$.audio.duration;
         player.$.progress.max = player.duration * 1000;
+        if (player.autoPlay) {
+          player.$.audio.play();
+        }
       },
 
 
@@ -394,7 +404,21 @@ Custom property                             | Description                       
         var minutes = Math.floor(seconds / 60);
         var secondsToCalc = Math.floor(seconds % 60) + '';
         return minutes + ':' + (secondsToCalc.length < 2 ? '0' + secondsToCalc : secondsToCalc);
-      }
+      },
+
+      //
+      // If src is changed when track is playing,
+      // pause the track and start playing a new src
+
+      _srcChanged: function(oldValue, newValue) {
+        var player = this;
+
+        if (player.isPlaying) {
+          player.$.audio.pause();
+          player.$.audio.play();
+        }
+       }
+
     });
   </script>
 </dom-module>
