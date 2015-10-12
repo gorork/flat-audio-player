@@ -227,7 +227,10 @@ Custom property                             | Description                       
           type: String,
           value: 'Click to play this audio file'
         },
-        color: String,
+        color: {
+          type :String,
+          observer: '_changeColor'
+        },
         autoPlay: {
           type: Boolean,
           value: false
@@ -264,17 +267,6 @@ Custom property                             | Description                       
         player.duration = 0;
         player.currentTime = 0;
         player.icon = '';
-
-        //
-        // Apply color to elements if needed
-        if (player.color !== undefined) {
-          player.querySelector('paper-progress #primaryProgress.paper-progress').style.backgroundColor = player.color;
-          player.$.left.style.backgroundColor = player.color;
-          player.$.title.style.color = player.color;
-          player.$.duration.style.color = player.color;
-          player.$.replay.style.color = player.color;
-        }
-
 
         //
         // Progress bar
@@ -417,8 +409,19 @@ Custom property                             | Description                       
           player.$.audio.pause();
           player.$.audio.play();
         }
-       }
+      },
 
+       //
+       // Function to change color dynamically
+
+       _changeColor: function(newValue) {
+         var player = this;
+         player.querySelector('paper-progress #primaryProgress.paper-progress').style.backgroundColor = player.color;
+         player.$.left.style.backgroundColor = player.color;
+         player.$.title.style.color = player.color;
+         player.$.duration.style.color = player.color;
+         player.$.replay.style.color = player.color;
+       }
     });
   </script>
 </dom-module>

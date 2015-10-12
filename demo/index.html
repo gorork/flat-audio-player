@@ -55,6 +55,14 @@
                           title="Sting - Desert Rose"></paper-audio-player>
     </div>
 
+    <div class="row">
+      <p>Example of the use of 'color' attribute for dynamic change</p>
+      <paper-audio-player id="dynamicColor"
+                          color="#43BBF9"
+                          src="http://nadikun.com/audio/somefile.m3"
+                          title="Sting - Desert Rose"></paper-audio-player>
+    </div>
+
   <!-- footer -->
     <div id="footer">
       <p>&copy; 2015 Paper-Audio-Player Created by <a href="http://nadikun.com">Nadi Dikun</a>. Open source Polymer 1.0 element, grab it <a
@@ -62,4 +70,11 @@
       <p>All audio tracks belong to their respective owners and were shared on this webpage under Creative Common License.</p>
     </div>
   </body>
+  <script>
+
+    var intvl = setInterval(function() {
+      var elem = document.getElementById("dynamicColor");
+      elem.color = (elem.color === "#43BBF9") ? "#BBF943" :"#43BBF9";
+    }, 1000);
+  </script>
 </html>
