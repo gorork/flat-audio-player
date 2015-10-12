@@ -411,17 +411,17 @@ Custom property                             | Description                       
         }
       },
 
-       //
-       // Function to change color dynamically
+      //
+      // Function to change color dynamically
 
-       _changeColor: function(newValue) {
-         var player = this;
-         player.querySelector('paper-progress #primaryProgress.paper-progress').style.backgroundColor = player.color;
-         player.$.left.style.backgroundColor = player.color;
-         player.$.title.style.color = player.color;
-         player.$.duration.style.color = player.color;
-         player.$.replay.style.color = player.color;
-       }
+      _changeColor: function(newValue) {
+       var player = this;
+       player.querySelector('paper-progress #primaryProgress.paper-progress').style.backgroundColor = player.color;
+       player.$.left.style.backgroundColor = player.color;
+       player.$.title.style.color = player.color;
+       player.$.duration.style.color = player.color;
+       player.$.replay.style.color = player.color;
+      }
     });
   </script>
 </dom-module>
