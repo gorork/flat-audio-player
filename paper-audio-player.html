@@ -2,7 +2,10 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
 <link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../iron-icons/av-icons.html">
+<link rel="import" href="../paper-ripple/paper-ripple.html">
 
 <!--
 A custom audio player with material paper style and clean design.
@@ -45,10 +48,11 @@ Custom property                             | Description                       
 
       :host {
         display: block;
-        margin: auto;
+        margin: auto 10px;
         box-sizing: border-box;
         width: 100%;
         font-family: 'Roboto Mono', 'Helvetica Neue', Arial, sans-serif;
+        background: rgba(127, 26, 229, .2);
       }
 
       #wrapper {
@@ -73,8 +77,8 @@ Custom property                             | Description                       
       }
 
       #time,
-      #icon,
-      #play {
+      paper-icon-button,
+      iron-icon{
         color: #fff;
       }
 
@@ -95,18 +99,21 @@ Custom property                             | Description                       
         color: var(--paper-audio-player-color, blueviolet);
       }
 
-      #icon,
-      #play,
-      #replay {
+      paper-icon-button,
+      iron-icon {
         margin: auto;
       }
 
       #replay {
         color: var(--paper-audio-player-color, blueviolet);
+        opacity: 0;
       }
 
-      #icon,
-      #replay {
+      [data-ended] #replay{
+        opacity: 1;
+      }
+
+      #pause {
         opacity: 0;
       }
 
@@ -122,7 +129,7 @@ Custom property                             | Description                       
       }
 
       #progress2 {
-        width: 0;
+        width: 0px;
         z-index: 5;
         color: #fff;
         overflow: hidden;
@@ -130,25 +137,39 @@ Custom property                             | Description                       
 
       #center {
         position: relative;
+        background: rgba(255,255,255,.5);
+        overflow: hidden;
       }
 
-      paper-progress {
-        position: relative;
+      #buffered {
         width: 100%;
-        --paper-progress-active-color: var(--paper-audio-player-color, blueviolet);
-        --paper-progress-height: 50px;
-        --paper-progress-container-color: rgba(255,255,255,.75);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: linear 1s transform;
+        background: rgba(255,255,255,.5);
+      }
+
+      #progress {
+        width: 100%;
+        transform-origin: left;
+        transform: scaleX(0);
+        background: var(--paper-audio-player-color, blueviolet);
+      }
+
+      paper-ripple{
+        color: var(--paper-audio-player-color, blueviolet);
       }
 
       /* On hover */
 
-      #left:hover #icon,
+      #wrapper:hover #pause,
       :host:not(.cantplay) #right:hover #replay {
         opacity: 1;
       }
 
-      #left:hover #time,
-      #right:hover #duration {
+      #wrapper:hover #time,
+      #right:hover #duration,
+      [data-ended] #duration{
         opacity: 0;
       }
 
@@ -218,11 +239,12 @@ Custom property                             | Description                       
 
       <div id="left"
            class="self-start"
-           on-click="playPause">
+           on-tap="playPause">
 
         <!-- Icon -->
-        <iron-icon id="icon" class="fit" icon="{{ icon }}" hidden$="{{ !isPlaying }}"></iron-icon>
-        <iron-icon id="play" class="fit" hidden$="{{ isPlaying }}"></iron-icon>
+        <paper-icon-button id="play" icon="av:play-arrow" class="fit" hidden$="{{ !_showPlayIcon(isPlaying, canBePlayed) }}"></paper-icon-button>
+        <paper-icon-button id="pause" icon="av:pause" class="fit" hidden$="{{ !isPlaying }}"></paper-icon-button>
+        <iron-icon id="error" icon="error-outline" class="fit" hidden$="{{ !error }}"></iron-icon>
 
         <!-- Current time -->
         <div id="time" class="fit" hidden$="{{ !isPlaying }}">
@@ -230,20 +252,18 @@ Custom property                             | Description                       
         </div>
       </div>
 
-      <div id="center" class="flex">
+      <div id="center" class="flex" on-down="_onDown">
         <!-- Title -->
         <div id="title" class="fit">{{ title }}</div>
 
         <!-- Audio HTML5 element -->
         <audio id="audio" src="{{ src }}"></audio>
 
-        <!-- Paper progress bar -->
-        <paper-progress id="progress"
-                        step=0.001
-                        value="[[ currentTime ]]"
-                        max="[[ duration ]]"
-                        min=0
-                        on-down="_onDown"></paper-progress>
+        <!-- Progress bar -->
+        <div id="buffered" class="fit"></div>
+        <div id="progress" class="fit"></div>
+
+        <paper-ripple></paper-ripple>
 
         <!-- Secondary white title -->
         <div id="progress2" class="fit">
@@ -253,15 +273,16 @@ Custom property                             | Description                       
 
       <div id="right"
            class="self-end"
-           on-click="restart">
+           on-tap="restart"
+           data-ended$="{{ ended }}">
 
         <!-- Duration -->
-        <div id="duration" class="fit" hidden$="{{ ended }}">
+        <div id="duration" class="fit">
           <span class="fit">{{ _convertSecToMin(duration) }}</span>
         </div>
 
         <!-- Icon -->
-        <iron-icon id="replay" class="fit" icon="av:replay"></iron-icon>
+        <paper-icon-button id="replay" class="fit" icon="av:replay"></paper-icon-button>
       </div>
     </div>
   </template>
@@ -298,6 +319,9 @@ Custom property                             | Description                       
         duration: {
           type: Number,
           value: 0
+        },
+        error: {
+          type: Boolean
         }
       },
 
@@ -310,7 +334,8 @@ Custom property                             | Description                       
         'audio.playing'         : '_onPlaying',
         'audio.pause'           : '_onPause',
         'audio.ended'           : '_onEnd',
-        'audio.error'           : '_onError'
+        'audio.error'           : '_onError',
+        'audio.progress'        : '_bufferProgress'
       },
 
 
@@ -326,7 +351,7 @@ Custom property                             | Description                       
         player.canBePlayed = false;
         player.isPlaying = false;
         player.ended = false;
-        player.icon = '';
+        player.error = false;
       },
 
 
@@ -357,8 +382,6 @@ Custom property                             | Description                       
       _onCanPlay: function() {
         var player = this;
         player.canBePlayed = true;
-        player.icon = 'av:pause-circle-outline';
-        player.$.play.setAttribute('icon', 'av:play-circle-outline');
         player.duration = player.$.audio.duration;
         player.$.title2.style.width = player.$.center.getBoundingClientRect().width + 'px'; // TODO upd on window resize
         if (player.autoPlay) player.$.audio.play();
@@ -371,7 +394,6 @@ Custom property                             | Description                       
         var player = this;
         player.ended = false;
         player.isPlaying = true;
-        player.$.replay.style = '';       // remove Replay inline styling
         player._startProgressTimer();
       },
 
@@ -388,14 +410,15 @@ Custom property                             | Description                       
           if ( player.isPlaying ) {
             player.currentTime = player.$.audio.currentTime;
 
-            // Update Secondary progress width to display white title
-            var x = (player.currentTime / player.duration) * player.$.progress.getBoundingClientRect().width;
-            player.$.progress2.style.width = x + 'px';
+            var percentagePlayed = player.currentTime / player.duration;
+
+            player.$.progress.style.transform = 'translateX('+(-1 * player.$.center.getBoundingClientRect().width + percentagePlayed * player.$.center.getBoundingClientRect().width)+'px)';
+            player.$.progress2.style.width = percentagePlayed * player.$.center.getBoundingClientRect().width + 'px';
 
           } else {
             clearInterval(player.timer.sliderUpdateInterval);
           }
-        }, 120);
+        }, 60);
       },
 
 
@@ -413,7 +436,6 @@ Custom property                             | Description                       
         var player = this;
         player.ended = true;
         player.isPlaying = false;
-        player.$.replay.style.opacity = 1;    // display Replay icon
       },
 
 
@@ -423,8 +445,7 @@ Custom property                             | Description                       
         var player = this;
         player.classList.add('cantplay');
         player.title = 'Sorry, can\'t play track: ' + player.title;
-        player.icon = 'av:not-interested';
-        player.$.icon.removeAttribute('hidden');
+        player.error = true;
       },
 
 
@@ -443,15 +464,23 @@ Custom property                             | Description                       
 
       _onDown: function(e) {
         e.preventDefault();
-        var x, r,
-            player = this;
+        var player = this;
 
-        x = e.detail.x - player.$.progress.getBoundingClientRect().left;
-        r = (x / player.$.progress.getBoundingClientRect().width) * player.duration;
-        player.currentTime = player.$.audio.currentTime = r;
+        if(player.canBePlayed){
+          var x = e.detail.x - player.$.center.getBoundingClientRect().left;
+          var r = (x / player.$.center.getBoundingClientRect().width) * player.duration;
 
-        // Update Secondary progress width to display white title
-        player.$.progress2.style.width = x + 'px';
+          player.currentTime = player.$.audio.currentTime = r;
+
+          var percentagePlayed = player.currentTime / player.duration;
+          player.$.progress.style.transform = 'scaleX('+percentagePlayed+')';
+
+          player.$.progress2.style.width = x + 'px';
+
+          if(!player.isPlaying){
+            player.$.audio.play()
+          }
+        }
       },
 
       //
@@ -473,11 +502,29 @@ Custom property                             | Description                       
 
       _changeColor: function(newValue) {
         var player = this;
-        player.querySelector('paper-progress #primaryProgress.paper-progress').style.backgroundColor = newValue;
         player.$.left.style.backgroundColor = newValue;
         player.$.title.style.color = newValue;
         player.$.duration.style.color = newValue;
+        player.$.progress.style.backgroundColor = newValue;
         player.$.replay.style.color = newValue;
+      },
+
+      _showPlayIcon: function(){
+        return this.canBePlayed && !this.isPlaying;
+      },
+
+      _bufferProgress: function(){
+        var player = this;
+        var audio = player.$.audio;
+        try{
+          var bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
+        }catch(e){
+          var bufferedEnd = 0;
+        }
+        var percentageBuffered = (bufferedEnd / player.duration);
+
+        player.$.buffered.style.transform = 'scaleX('+percentageBuffered+')';
+
       }
     });
   </script>
