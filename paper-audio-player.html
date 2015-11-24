@@ -52,6 +52,7 @@ Custom property                             | Description                       
         box-sizing: border-box;
         width: 100%;
         font-family: 'Roboto Mono', 'Helvetica Neue', Arial, sans-serif;
+        background: rgba(127, 26, 229, .2);
       }
 
       #wrapper {
@@ -133,7 +134,13 @@ Custom property                             | Description                       
 
       #center {
         position: relative;
-        background: rgba(255,255,255,.75);
+        background: rgba(255,255,255,.5);
+      }
+
+      #buffered {
+        width: 0px;
+        transition: linear .2s width;
+        background: rgba(255,255,255,.5);
       }
 
       #progress {
@@ -245,6 +252,7 @@ Custom property                             | Description                       
         <audio id="audio" src="{{ src }}"></audio>
 
         <!-- Progress bar -->
+        <div id="buffered" class="fit"></div>
         <div id="progress" class="fit"></div>
 
         <paper-ripple></paper-ripple>
@@ -317,7 +325,8 @@ Custom property                             | Description                       
         'audio.playing'         : '_onPlaying',
         'audio.pause'           : '_onPause',
         'audio.ended'           : '_onEnd',
-        'audio.error'           : '_onError'
+        'audio.error'           : '_onError',
+        'audio.progress'        : '_bufferProgress'
       },
 
 
@@ -490,6 +499,19 @@ Custom property                             | Description                       
 
       _showPlayIcon: function(){
         return this.canBePlayed && !this.isPlaying;
+      },
+
+      _bufferProgress: function(){
+        var player = this;
+        var audio = player.$.audio;
+        try{
+          var bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
+        }catch(e){
+          var bufferedEnd = 0;
+        }
+        var x = (bufferedEnd / player.duration) * player.$.center.getBoundingClientRect().width;
+
+        player.$.buffered.style.width = x + 'px';
       }
     });
   </script>
