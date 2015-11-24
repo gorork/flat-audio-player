@@ -106,9 +106,13 @@ Custom property                             | Description                       
 
       #replay {
         color: var(--paper-audio-player-color, blueviolet);
+        opacity: 0;
       }
 
-      #replay,
+      [data-ended] #replay{
+        opacity: 1;
+      }
+
       #pause {
         opacity: 0;
       }
@@ -155,13 +159,14 @@ Custom property                             | Description                       
 
       /* On hover */
 
-      #left:hover #pause,
+      #wrapper:hover #pause,
       :host:not(.cantplay) #right:hover #replay {
         opacity: 1;
       }
 
-      #left:hover #time,
-      #right:hover #duration {
+      #wrapper:hover #time,
+      #right:hover #duration,
+      [data-ended] #duration{
         opacity: 0;
       }
 
@@ -265,10 +270,11 @@ Custom property                             | Description                       
 
       <div id="right"
            class="self-end"
-           on-click="restart">
+           on-tap="restart"
+           data-ended$="{{ ended }}">
 
         <!-- Duration -->
-        <div id="duration" class="fit" hidden$="{{ ended }}">
+        <div id="duration" class="fit">
           <span class="fit">{{ _convertSecToMin(duration) }}</span>
         </div>
 
@@ -385,7 +391,6 @@ Custom property                             | Description                       
         var player = this;
         player.ended = false;
         player.isPlaying = true;
-        player.$.replay.style = '';       // remove Replay inline styling
         player._startProgressTimer();
       },
 
@@ -428,7 +433,6 @@ Custom property                             | Description                       
         var player = this;
         player.ended = true;
         player.isPlaying = false;
-        player.$.replay.style.opacity = 1;    // display Replay icon
       },
 
 
