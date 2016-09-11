@@ -4,6 +4,7 @@
 <link rel="import" href="../iron-icon/iron-icon.html">
 <link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../paper-ripple/paper-ripple.html">
+<link rel="import" href="../paper-slider/paper-slider.html">
 
 <link rel="import" href="paper-audio-icons.html">
 
@@ -65,11 +66,17 @@ Custom property                             | Description                       
       #left,
       #right {
         height: 50px;
-        width: 50px;
         position: relative;
+        display: -webkit-flex;
+        display: -moz-flex;
+        display: -ms-flex;
+        display: -o-flex;
+        display: flex;
+        align-items: center;
       }
 
       #left {
+        width: 50px;
         background-color:  var(--paper-audio-player-color, blueviolet);
       }
 
@@ -141,11 +148,11 @@ Custom property                             | Description                       
 
       /* On hover */
 
-      :host:not(.cantplay) #right:hover #replay {
+      :host:not(.cantplay) .replay-container:hover #replay {
         opacity: 1;
       }
 
-      #right:hover #duration {
+      .replay-container:hover #duration {
         opacity: 0;
       }
 
@@ -206,6 +213,27 @@ Custom property                             | Description                       
         -webkit-align-self: flex-end;
         align-self: flex-end;
       }
+
+      .replay-container {
+        position: relative;
+        width: 50px;
+        height: 100%;
+      }
+
+      .volume-container {
+        position: relative;
+        width: 65px;
+      }
+
+      .volume-control {
+        max-width: 100%;
+        --paper-slider-active-color: var(--paper-audio-player-color, blueviolet);
+        --paper-slider-secondary-color: var(--paper-audio-player-color, blueviolet);
+        --paper-slider-knob-color: var(--paper-audio-player-color, blueviolet);
+        --paper-slider-pin-color: var(--paper-audio-player-color, blueviolet);
+        --paper-slider-knob-start-color: var(--paper-audio-player-color, blueviolet);
+        --paper-slider-knob-start-border-color: var(--paper-audio-player-color, blueviolet);
+      }
     </style>
 
     <div id="wrapper" class="layout-horizontal">
@@ -239,16 +267,26 @@ Custom property                             | Description                       
       </div>
 
       <div id="right"
-           class="self-end"
-           on-click="restart">
+           class="self-end">
 
+        <div class="replay-container"
+             on-click="restart">
         <!-- Duration -->
-        <div id="duration" class="fit" hidden$="{{ ended }}">
-          <span class="fit">{{ _convertSecToMin(timeLeft) }}</span>
+          <div id="duration" class="fit" hidden$="{{ ended }}">
+            <span class="fit">{{ _convertSecToMin(timeLeft) }}</span>
+          </div>
+
+          <!-- Icon -->
+          <paper-icon-button id="replay" class="fit" icon="paper-audio-icons:replay"></paper-icon-button>
         </div>
 
-        <!-- Icon -->
-        <paper-icon-button id="replay" class="fit" icon="paper-audio-icons:replay"></paper-icon-button>
+        <div class="volume-container">
+          <paper-slider class="volume-control"
+                        id="volume-control"
+                        value="100">
+          </paper-slider>
+        </div>
+
       </div>
     </div>
   </template>
@@ -304,11 +342,12 @@ Custom property                             | Description                       
       // Register event listeners
 
       listeners: {
-        'audio.loadedmetadata'  : '_onCanPlay',
-        'audio.playing'         : '_onPlaying',
-        'audio.pause'           : '_onPause',
-        'audio.ended'           : '_onEnd',
-        'audio.error'           : '_onError'
+        'audio.loadedmetadata'                          : '_onCanPlay',
+        'audio.playing'                                 : '_onPlaying',
+        'audio.pause'                                   : '_onPause',
+        'audio.ended'                                   : '_onEnd',
+        'audio.error'                                   : '_onError',
+        'volume-control.immediate-value-changed'        : '_onChangeVolume'
       },
 
 
@@ -525,6 +564,11 @@ Custom property                             | Description                       
 
       _hidePlayIcon: function(isPlaying, canBePlayed){
         return isPlaying ? true : !(canBePlayed || this.preload === 'none');
+      },
+
+      _onChangeVolume: function(e, data) {
+        var player = this;
+        player.$.audio.volume = data.value / 100;
       }
     });
   </script>
