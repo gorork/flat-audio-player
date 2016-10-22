@@ -1,5 +1,7 @@
 # paper-audio-player
 
+[![Build Status](https://travis-ci.org/gorork/paper-audio-player.svg?branch=master)](https://travis-ci.org/gorork/paper-audio-player)
+
 A custom audio player with material paper style and clean design.
 
 ![Paper-audio-player example](http://nadikun.com/code/paper-audio-player/demo/paper-audio-player.jpg)
