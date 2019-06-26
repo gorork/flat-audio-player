@@ -33,6 +33,14 @@
           assert.equal(basicPlayer.$.audio.src, 'http://nadikun.com/audio/suit-and-tie-oscar-wylde-remix.mp3');
         });
 
+        test('defines the "src" property', function() {
+          assert.notOk(basicPlayer.isPlaying);
+          basicPlayer.playPause();
+          assert.ok(basicPlayer.isPlaying);
+          basicPlayer.pause();
+          assert.notOk(basicPlayer.isPlaying);
+        });
+
         test('defines the "color" property', function() {
           assert.equal(basicPlayer.color, '#F05C38');
           assert.equal(basicPlayer.querySelector('#progress').style.backgroundColor, 'rgb(240, 92, 56)');

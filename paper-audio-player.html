@@ -313,6 +313,10 @@ Custom property                             | Description                       
           type: Boolean,
           value: false
         },
+        isPlaying: {
+        	  type: Boolean,
+        	  value: false
+        },
         preload: {
           type: String,
           value: 'auto'
@@ -526,6 +530,10 @@ Custom property                             | Description                       
         player.isPlaying = false;
       },
 
+      pause: function() {
+      	  var player = this;
+      	  if ( player.isPlaying ) player.$.audio.pause();
+      },
 
       // when Player ended playing an audio file
 
